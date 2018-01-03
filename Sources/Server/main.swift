@@ -163,14 +163,27 @@ router.get("/query2") { (query: MyQuery, respondWith: ([User]?, RequestError?) -
 // A possible implementation for multiple URL route params - codable
 // Developer does not need to specify the identifiers for each entity in the path
 // Instead, we infer them - assumption is that because it is a codable route then identifiers should be assigned/generated for each entity
-// Though these is a hole in this approach... it assumes that an identifier is needed for the last element in the path... which may or may not be the case
-// dependending on the use case :-/
-// localhost:8080/customers/3233/orders/1432
+// We can infer that the last element in the route does require an identifier because the respondWidth closure receives a single Codable object.
+// localhost:8080/customers/1/orders/1
 router.get("/customers/orders") { (identifiers: [Int], respondWith: (Order?, RequestError?) -> Void) in
     print("GET on /orders with inferred route parameters")
+    // In this case, we should have TWO identifiers in the array...
     print("identifiers: \(identifiers)")
     let order = orderStore[identifiers[1]]
     respondWith(order, nil)
+}
+
+// A possible implementation for multiple URL route params - codable. This goes in hand with the sample above.
+// Developer does not need to specify the identifiers for each entity in the path
+// Instead, we infer them - assumption is that because it is a codable route then identifiers should be assigned/generated for each entity, except the last
+// one. The last identity in this case is plural, hence no identifier.
+// We can infer that the last element in the route does NOT require an identifier because the respondWidth closure receives an array of Codable objects.
+// localhost:8080/guests/1/orders
+router.get("/guests/orders") { (identifiers: [Int], respondWith: ([Order]?, RequestError?) -> Void) in
+     print("GET on /orders with inferred route parameters")
+     // In this case, we should have ONLY one identifier in the array...
+     print("identifiers: \(identifiers)")
+     respondWith(orderStore.map({ $0.value }), nil)
 }
 
 // Another possible implementation for multiple URL route params - codable
